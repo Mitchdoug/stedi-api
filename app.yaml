@@ -85,3 +85,22 @@ spec:
     - port: 80
 # targetport is the port the pod listens on inside Kubernetes
       targetPort: 4567
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: stedi-nodeport-mitchell
+spec:
+  selector: 
+    app: stedi-mitchell
+  type: NodePort
+  ports: 
+    - port: 80
+      targetPort: 4567
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata: 
+#   name: stedi-ingress-mitchell
+#   annotations: 
+#     kubernetes.io/ingress
