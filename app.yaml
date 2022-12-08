@@ -31,6 +31,19 @@ spec:
         - name: stedi-mitchell
 # The image is a prebuilt file containing the operating system
           image: gcr.io/cit262-group-project/stedi-mitchell
+          env: 
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: 
+                  name: redis-secrets-dev-mitchell
+                  key: REDIS_PASS
+            - name: REDIS_HOST
+              value: "redis-stedi-dev-mitchell"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DB
+              value: "0"
+              
 # The ports is a list of tcp ports the pod listens on
           ports:
 # The container port is a specific port the pod listens on
@@ -63,29 +76,34 @@ spec:
             periodSeconds: 3
 --- 
   # apiVersion tells kubernetes which version of yaml to use
-apiVersion: v1
+apiVersion: networking.k8s.io/v1
 # kind tells kubernetes what kind of object to create
-kind: Service
+kind: Ingress
 # metadata contains attributes about the object
 metadata:
 # name is the name of the object we are creating
-  name: stedi-mitchell-loadbalancer
+  name: stedi-ingress-mitchell
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: stedi-public-mitchell
+    networking.gke.io/managed-certificates: stedi-certificate-mitchell
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.class: "gce"
 # spec is the specification for the object (or the loadbalancer)
 spec:
-# selector tells the network layer how to find the right pod
-  selector:
-# app tells the selector which app to send traffic to
-    app: stedi-mitchell
-# type tells kubernetes the type of service we want
-# a LoadBalancer distributes network packets to one or more pods
-  type: LoadBalancer
-# ports are a list of ports the Load Balancer listens on
-  ports:
-# port is the port we want to listen on the network
-    - port: 80
-# targetport is the port the pod listens on inside Kubernetes
-      targetPort: 4567
+  defaultBackend:
+    service:
+      name: stedi-nodeport-mitchell
+      port: 
+        number: 80
 ---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: stedi-certificate-mitchell
+spec:
+  domains:
+    - stedimitchell.cit262.com
+--- 
 apiVersion: v1
 kind: Service
 metadata: 
@@ -97,10 +115,3 @@ spec:
   ports: 
     - port: 80
       targetPort: 4567
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata: 
-#   name: stedi-ingress-mitchell
-#   annotations: 
-#     kubernetes.io/ingress
